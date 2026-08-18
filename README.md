@@ -18,6 +18,14 @@
 
 图片模型按张计费，默认一次生成 5 张；页面会按 2 RPM 的限制逐张排队。百炼图片链接约 24 小时失效，请在当前会话内及时下载。
 
+## 公网版本
+
+截至 2026-07-31，Sites 版本 1 已公开发布：
+
+https://ai-storyboard-studio-2026.mortimerstephanie14.chatgpt.site
+
+生产环境变量由 Sites 托管，本地 `.env` 不会随源码或构建产物发布。当前版本没有站内登录、使用额度或费用确认；任何拿到链接的人都可以使用生成能力，并可能产生百炼 API 费用。
+
 ## 本地运行
 
 ```bash
@@ -30,6 +38,7 @@ pnpm dev
 ```bash
 pnpm test
 pnpm build
+pnpm test:sites
 ```
 
 自动化测试覆盖输入校验、流式 NDJSON 解析、图片提示词与原生接口参数、下载签名、防篡改校验、复制格式和生产 Worker 路由。

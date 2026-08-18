@@ -15,4 +15,20 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - V1 generates exactly five text storyboards through a same-origin server proxy to Alibaba Cloud Model Studio, then automatically generates one 16:9 landscape image for each storyboard with qwen-image-2.0-pro-2026-06-22.
 - Each storyboard card is a single-column reading flow: title and text details first, followed by a full-width 16:9 image and its actions.
 - Image results use signed, temporary download tokens and remain current-session only. Never expose the API key to browser code.
-- V1 has no authentication, persistence, history, database, or public deployment.
+- V1 has no app-owned authentication, persistence, history, database, quota, or fee confirmation. Public hosting is live; do not claim access control that does not exist.
+
+## Current release status
+
+- As of 2026-07-31, Sites version 1 is publicly deployed at `https://ai-storyboard-studio-2026.mortimerstephanie14.chatgpt.site`.
+- Production environment variables are managed by Sites. The local `.env` remains local-only and must never be copied into source, logs, or build artifacts.
+- Before every later Sites release, run `npm test`, `npm run build`, and `npm run test:sites`; push the exact source state, save a Sites version from that commit, deploy the saved version, and verify the live page.
+
+## 项目结构事实（neat-freak 2026-08-18 核对）
+
+> 以下为当前快照的真实结构；上方通用「Prototype Instructions」中「Build app UI in `src/`」及 `worker/`、`scripts/`、`tests/` 在本快照中**不存在**。
+
+- 排除依赖后，**本快照无任何源码文件**（无 `src/`、`worker/`、`scripts/`、`tests/`）
+- 仅有：构建产物 `dist/`（含 `dist/client`、`dist/server`）、`index.html`、`vite.config.mjs`、`.env.example`
+- 站点托管配置：`.openai/hosting.json`
+- 设计事实源：深色导演控制台（首版生成概念）
+- 说明：本快照为构建产物导出，重建需回溯原 ChatGPT Sites 项目（公网地址见 README）。
