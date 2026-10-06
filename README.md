@@ -4,6 +4,9 @@
 
 线上地址：<https://ai-storyboard-studio-zeta.vercel.app>
 
+[English](./README.en.md)
+![产品首页真实截图（空状态，无用户数据）](docs/screenshot-home.png)
+
 ## 使用方式（自带 Key）
 
 1. 打开线上地址。
