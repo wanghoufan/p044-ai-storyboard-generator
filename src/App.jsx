@@ -7,6 +7,7 @@ import {
   FilmSlate,
   HourglassMedium,
   ImageSquare,
+  Key,
   Lightning,
   MagnifyingGlassPlus,
   SpinnerGap,
@@ -20,6 +21,7 @@ import {
   formatShotForClipboard,
   readEventStream,
 } from "./storyboard-utils.js";
+import { apiRequest, readStoredKey, storeKey } from "./byok.js";
 
 const DEFAULT_FORM = {
   theme: "",
@@ -433,8 +435,10 @@ export function App() {
   const [imageSeed, setImageSeed] = useState(0);
   const abortRef = useRef(null);
   const lastContextRef = useRef(null);
+  const [apiKey, setApiKey] = useState(readStoredKey);
+  const [keyDraft, setKeyDraft] = useState(apiKey);
 
-  const canSubmit = form.theme.trim() && form.script.trim();
+  const canSubmit = Boolean(form.theme.trim() && form.script.trim() && apiKey);
   const completedImages = Object.values(imageStates).filter(
     (item) => item.status === "success",
   );
@@ -472,6 +476,18 @@ export function App() {
     );
   }
 
+  function saveApiKey() {
+    const saved = storeKey(keyDraft);
+    setApiKey(saved);
+    setError("");
+  }
+
+  function clearApiKey() {
+    setKeyDraft("");
+    storeKey("");
+    setApiKey("");
+  }
+
   function stopGeneration() {
     abortRef.current?.abort();
     abortRef.current = null;
@@ -481,18 +497,16 @@ export function App() {
   }
 
   async function requestImage(shot, context, seed, signal, allowRetry = true) {
-    const response = await fetch("/api/storyboards", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
+    const response = await apiRequest(
+      {
         action: "generateImage",
         theme: context.theme,
         style: context.style,
         shot,
         seed,
-      }),
+      },
       signal,
-    });
+    );
     try {
       return await readJsonResponse(response);
     } catch (requestError) {
@@ -637,12 +651,7 @@ export function App() {
     let completedShots = [];
 
     try {
-      const response = await fetch("/api/storyboards", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(submitted),
-        signal: abortController.signal,
-      });
+      const response = await apiRequest(submitted, abortController.signal);
 
       await readEventStream(response, (eventName, payload) => {
         if (eventName === "status") {
@@ -769,13 +778,9 @@ export function App() {
       );
       return;
     }
-    const response = await fetch("/api/storyboards", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        action: "downloadImage",
-        token: imageState.downloadToken,
-      }),
+    const response = await apiRequest({
+      action: "downloadImage",
+      token: imageState.downloadToken,
     });
     if (!response.ok) {
       const payload = await readJsonResponse(response);
@@ -939,6 +944,63 @@ export function App() {
               />
               <p className="field-hint">
                 已选风格和自定义要求会同时用于文字与图片生成。
+              </p>
+            </div>
+
+            <div className="field field--key">
+              <span className="field-header">
+                <label htmlFor="dashscope-key">
+                  百炼 API Key <b aria-label="必填">*</b>
+                </label>
+                <small>{apiKey ? "已保存在本浏览器" : "未填写"}</small>
+              </span>
+              <div className="key-row">
+                <input
+                  id="dashscope-key"
+                  type="password"
+                  value={keyDraft}
+                  autoComplete="off"
+                  spellCheck="false"
+                  disabled={isGenerating}
+                  onChange={(event) => setKeyDraft(event.target.value)}
+                  placeholder="sk- 开头的百炼北京地域 API Key"
+                />
+                {apiKey ? (
+                  <>
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={saveApiKey}
+                      disabled={!keyDraft.trim() || keyDraft.trim() === apiKey}
+                    >
+                      <CheckCircle weight="fill" size={18} />
+                      保存
+                    </button>
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={clearApiKey}
+                      disabled={isGenerating}
+                    >
+                      <X size={18} />
+                      清除
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={saveApiKey}
+                    disabled={!keyDraft.trim()}
+                  >
+                    <CheckCircle weight="fill" size={18} />
+                    保存
+                  </button>
+                )}
+              </div>
+              <p className="field-hint">
+                <Key size={14} aria-hidden="true" />
+                费用直接记在你自己的百炼账号上，本站不保存、不转发这把 Key。
               </p>
             </div>
 

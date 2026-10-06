@@ -1,6 +1,6 @@
 import { handleStoryboardsRequest } from "./storyboards.js";
 
-function readBody(req, limit = 100_000) {
+export function readBody(req, limit = 100_000) {
   return new Promise((resolve, reject) => {
     const chunks = [];
     let size = 0;
@@ -19,7 +19,7 @@ function readBody(req, limit = 100_000) {
   });
 }
 
-async function writeResponse(response, res) {
+export async function writeResponse(response, res) {
   res.statusCode = response.status;
   response.headers.forEach((value, key) => res.setHeader(key, value));
 

@@ -16,7 +16,7 @@ test("routes storyboard generation through the server handler", async () => {
   );
   const payload = await response.json();
 
-  assert.equal(response.status, 500);
+  assert.equal(response.status, 400);
   assert.equal(payload.code, "API_KEY_MISSING");
 });
 

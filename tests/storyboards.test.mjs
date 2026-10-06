@@ -27,10 +27,10 @@ function makeShot(index) {
   };
 }
 
-function makeRequest(body) {
+function makeRequest(body, headers = {}) {
   return new Request("https://example.test/api/storyboards", {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", ...headers },
     body: JSON.stringify(body),
   });
 }
@@ -107,7 +107,7 @@ test("API returns a clear configuration error when the key is missing", async ()
   );
   const payload = await response.json();
 
-  assert.equal(response.status, 500);
+  assert.equal(response.status, 400);
   assert.equal(payload.code, "API_KEY_MISSING");
   assert.doesNotMatch(JSON.stringify(payload), /Bearer/);
 });
@@ -140,6 +140,34 @@ test("API relays five validated shots as same-origin SSE events", async () => {
   assert.equal((payload.match(/event: shot/g) || []).length, 5);
   assert.match(payload, /event: done/);
   assert.doesNotMatch(payload, /test-key/);
+});
+
+test("BYOK：访问者自带的 Key 覆盖服务端 env，且不会回显在响应里", async () => {
+  const output =
+    Array.from({ length: 5 }, (_, index) => JSON.stringify(makeShot(index + 1))).join(
+      "\n",
+    ) + "\n";
+  let upstreamRequest;
+
+  const response = await handleStoryboardsRequest(
+    makeRequest(
+      { theme: "主题", script: "剧本", style: "" },
+      { "x-dashscope-api-key": "visitor-key" },
+    ),
+    { DASHSCOPE_API_KEY: "server-key" },
+    async (url, options) => {
+      upstreamRequest = { url, options };
+      return upstreamSseFromChunks([output]);
+    },
+  );
+  const payload = await response.text();
+
+  assert.equal(response.status, 200);
+  assert.equal(
+    upstreamRequest.options.headers.authorization,
+    "Bearer visitor-key",
+  );
+  assert.doesNotMatch(payload, /visitor-key|server-key/);
 });
 
 test("image input validation and prompt preserve visual identity details", () => {

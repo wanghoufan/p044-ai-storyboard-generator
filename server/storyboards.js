@@ -836,17 +836,21 @@ export async function handleStoryboardsRequest(
     );
   }
 
-  const apiKey = env.DASHSCOPE_API_KEY;
+  const apiKey =
+    request.headers.get("x-dashscope-api-key") || env.DASHSCOPE_API_KEY || "";
   if (!apiKey) {
     return jsonResponse(
       {
         code: "API_KEY_MISSING",
-        message: "服务端尚未配置 DASHSCOPE_API_KEY。",
+        message: "请先填写你自己的百炼 API Key。",
         retryable: false,
       },
-      500,
+      400,
     );
   }
+  // 访问者自带 Key 时只在本次请求内覆盖 env，绝不落盘、绝不写进日志。
+  const requestEnv =
+    apiKey === env.DASHSCOPE_API_KEY ? env : { ...env, DASHSCOPE_API_KEY: apiKey };
 
   let rawInput;
   try {
@@ -860,7 +864,7 @@ export async function handleStoryboardsRequest(
       return jsonResponse(
         await generateStoryboardImage(
           rawInput,
-          env,
+          requestEnv,
           fetchImpl,
           request.signal,
         ),
@@ -874,7 +878,7 @@ export async function handleStoryboardsRequest(
     try {
       return await downloadStoryboardImage(
         rawInput.token,
-        env,
+        requestEnv,
         fetchImpl,
       );
     } catch (error) {

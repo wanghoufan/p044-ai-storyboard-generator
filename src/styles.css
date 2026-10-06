@@ -354,6 +354,32 @@ button:disabled {
   line-height: 1.5;
 }
 
+.key-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.key-row input {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.key-row .secondary-button {
+  flex: none;
+}
+
+.field--key .field-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+}
+
+.field--key .field-hint svg {
+  flex: none;
+  margin-top: 1px;
+}
+
 .field input::placeholder,
 .field textarea::placeholder {
   color: #526375;
